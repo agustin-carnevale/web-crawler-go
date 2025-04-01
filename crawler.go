@@ -12,13 +12,10 @@ type Config struct {
 	mu                 *sync.Mutex
 	concurrencyControl chan struct{}
 	wg                 *sync.WaitGroup
+	maxPages           int
 }
 
 func (cfg *Config) crawlPage(rawCurrentURL string) {
-	fmt.Println("")
-	fmt.Println("Current Page:", rawCurrentURL)
-	fmt.Println("")
-
 	// take 1 space in the buffer channel
 	cfg.concurrencyControl <- struct{}{}
 	defer func() {
@@ -27,6 +24,15 @@ func (cfg *Config) crawlPage(rawCurrentURL string) {
 		// Decrement wg
 		cfg.wg.Done()
 	}()
+
+	// Check maxPages
+	if len(cfg.pages) >= cfg.maxPages {
+		return
+	}
+
+	fmt.Println("")
+	fmt.Println("Current Page:", rawCurrentURL)
+	fmt.Println("")
 
 	currentUrl, _ := url.Parse(rawCurrentURL)
 
