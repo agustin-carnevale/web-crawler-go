@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -9,7 +10,11 @@ import (
 )
 
 func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
+	baseUrl, err := url.Parse(rawBaseURL)
+	if err != nil {
+		fmt.Printf("Couldn't parse baseUrl: %v: %v", rawBaseURL, err)
 
+	}
 	htmlReader := strings.NewReader(htmlBody)
 	body, err := html.Parse(htmlReader)
 	if err != nil {
@@ -21,12 +26,13 @@ func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 		if node.Type == html.ElementNode && node.DataAtom == atom.A {
 			for _, attr := range node.Attr {
 				if attr.Key == "href" {
-					link := attr.Val
-					u, _ := url.Parse(attr.Val)
-					if u.Host == "" {
-						link = rawBaseURL + attr.Val
+					href, err := url.Parse(attr.Val)
+					if err != nil {
+						fmt.Printf("Couldn't parse href: %v: %v", attr.Val, err)
+						continue
 					}
-					linksList = append(linksList, link)
+					resolvedUrl := baseUrl.ResolveReference(href)
+					linksList = append(linksList, resolvedUrl.String())
 					break
 				}
 			}
