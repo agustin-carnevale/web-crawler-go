@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"sync"
 )
+
+const maxConcurrency = 15
 
 func main() {
 	// args without the program name
@@ -18,17 +22,27 @@ func main() {
 		log.Fatalln("too many arguments provided")
 	}
 
-	baseUrl := args[0]
+	baseUrlStr := args[0]
+	baseURL, err := url.Parse(baseUrlStr)
+	if err != nil {
+		log.Fatalln("couldn't parse url:", baseUrlStr)
+	}
 
-	fmt.Println("starting crawl of:", baseUrl)
+	fmt.Println("starting crawl of:", baseUrlStr)
 
-	// rawHtml, _ := getHTML(baseUrl)
-	// fmt.Println(rawHtml)
+	config := Config{
+		pages:              make(map[string]int),
+		baseURL:            baseURL,
+		mu:                 &sync.Mutex{},
+		concurrencyControl: make(chan struct{}, maxConcurrency),
+		wg:                 &sync.WaitGroup{},
+	}
 
-	pages := make(map[string]int)
-	crawlPage(baseUrl, baseUrl, pages)
+	config.wg.Add(1)
+	config.crawlPage(baseUrlStr)
+	config.wg.Wait() // Ensure all goroutines complete before exiting
 
-	for key, value := range pages {
+	for key, value := range config.pages {
 		fmt.Printf("%s: %d\n", key, value)
 	}
 }
