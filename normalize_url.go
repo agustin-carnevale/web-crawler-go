@@ -14,3 +14,7 @@ func normalizeURL(rawURL string) (string, error) {
 	normalizedUrl = strings.TrimSuffix(normalizedUrl, "/")
 	return normalizedUrl, nil
 }
+
+func normalizeHost(host string) string {
+	return strings.TrimPrefix(host, "www.")
+}
