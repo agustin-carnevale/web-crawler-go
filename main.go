@@ -64,7 +64,9 @@ func main() {
 	config.crawlPage(baseUrlStr)
 	config.wg.Wait() // Ensure all goroutines complete before exiting
 
-	for key, value := range config.pages {
-		fmt.Printf("%s: %d\n", key, value)
-	}
+	// for key, value := range config.pages {
+	// 	fmt.Printf("%s: %d\n", key, value)
+	// }
+
+	printReport(config.pages, config.baseURL.String())
 }
